@@ -1,6 +1,6 @@
-import calculate from '../tyranny-of-the-rocket';
+import { calculate } from '../tyranny-of-the-rocket';
 
-describe('Day 1: The Tyranny of the Rocket Equation', () => {
+describe('Day 1: The Tyranny of the Rocket Equation - Part 2', () => {
 
   test('for a mass of 12, the result is 2', () => {
     expect(calculate(12)).toEqual(2);
