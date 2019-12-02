@@ -13,6 +13,7 @@ const calculate = mass => {
  * Then, treat the fuel amount you just calculated as the input mass and repeat
  * the process, continuing until a fuel requirement is zero or negative.
  * @param {Number} mass 
+ * @returns {Number}
  */
 const calculateRecursive = mass => {
   const result = calculate(mass);
