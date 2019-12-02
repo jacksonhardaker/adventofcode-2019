@@ -16,30 +16,29 @@ const opcodes = {
  * Opcode 1 adds together numbers read from two positions and stores the result in a third position.
  * The three integers immediately after the opcode tell you these three positions - the first two indicate
  * the positions from which you should read the input values, and the third indicates the position at which the output should be stored.
- * @param {[Number]} program 
+ * @param {[Number]} memory 
  */
-const execute = program => {
-  let currentIndex = 0;
+const compute = memory => {
+  let instructionPointer = 0;
 
   const incrementIndexAndGetNextInput = () => {
-    currentIndex = currentIndex + 4;
-    return program.slice(currentIndex);
+    instructionPointer = instructionPointer + 4;
+    return memory.slice(instructionPointer);
   };
 
-  const next = subset => {
-    const [opcode, inputOneIndex, inputTwoIndex, destIndex] = subset;
+  const next = ([instruction, parameter1, parameter2, parameter3]) => {
 
-    switch (opcode) {
+    switch (instruction) {
       case opcodes.end:
-        return program;
+        return memory;
       case opcodes.add:
-        program[destIndex] = program[inputOneIndex] + program[inputTwoIndex];
+          memory[parameter3] = memory[parameter1] + memory[parameter2];
 
         return next(
           incrementIndexAndGetNextInput()
         );
       case opcodes.multiply:
-        program[destIndex] = program[inputOneIndex] * program[inputTwoIndex];
+          memory[parameter3] = memory[parameter1] * memory[parameter2];
 
         return next(
           incrementIndexAndGetNextInput()
@@ -49,25 +48,54 @@ const execute = program => {
     }
   };
 
-  return next(program);
+  return next(memory);
 };
 
 /**
  * the first step is to restore the gravity assist program (your puzzle input) to the "1202 program alarm"
  * state it had just before the last computer caught fire. To do this, before running the program, replace
  * position 1 with the value 12 and replace position 2 with the value 2.
- * @param {[Number]} program 
+ * @param {[Number]} inputMemory 
+ * @param {Number} [noun = 12]
+ * @param {Number} [verb = 2]
+ * @returns {[Number]}
  */
-const handle1202ProgramAlarm = program => {
-  const execCodes = [...program];
+const handle1202ProgramAlarm = (inputMemory, noun = 12, verb = 2) => {
+  const memory = [...inputMemory];
+  memory[1] = noun;
+  memory[2] = verb;
 
-  execCodes[1] = 12;
-  execCodes[2] = 2;
+  return compute(memory);
+};
 
-  return execute(execCodes);
+/**
+ * In this program, the value placed in address 1 is called the noun, and the value placed in address 2 is called the verb.
+ * Each of the two input values will be between 0 and 99, inclusive.
+ * Once the program has halted, its output is available at address 0, also just like before.
+ * Each time you try a pair of inputs, make sure you first reset the computer's memory to the
+ * values in the program (your puzzle input) - in other words, don't reuse memory from a previous attempt.
+ * @param {[Number]} memory 
+ * @param {Number} [desiredOutputValue = 19690720]
+ * @returns {Number} 100 * noun + verb
+ */
+const calculateOutput = (memory, desiredOutputValue = 19690720) => {
+  let clonedMemory = [];
+
+  for (let noun = 0; noun <= 99; noun++) {
+    for (let verb = 0; verb <= 99; verb++) {
+      clonedMemory = [...memory];
+
+      const result = handle1202ProgramAlarm(clonedMemory, noun, verb);
+
+      if (result[0] === desiredOutputValue) {
+        return 100 * noun + verb;
+      }
+    }
+  }
 };
 
 module.exports = {
-  execute,
-  handle1202ProgramAlarm
+  compute,
+  handle1202ProgramAlarm,
+  calculateOutput
 };
