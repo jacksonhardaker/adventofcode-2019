@@ -5,7 +5,7 @@
  * @returns {Number}
  */
 const calculate = mass => {
-  return Math.floor(mass / 3) - 2;
+  return ~~(mass / 3) - 2;
 };
 
 /**
