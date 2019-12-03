@@ -1,34 +1,45 @@
-const directions = {
-  right: 'R',
-  up: 'U',
-  down: 'D',
-  left: 'L'
-};
-
+/**
+ * Determines if the movement is on the X axis
+ * @param {*} direction 
+ * @returns {Boolean}
+ */
 const isHorizontalMovement = direction => {
-  return direction === directions.right || direction === directions.left;
+  return direction === 'R' || direction === 'L';
 };
 
+/**
+ * Determines if the movement is on the Y axis
+ * @param {*} direction 
+ * @returns {Boolean}
+ */
 const isVerticalMovement = direction => {
-  return direction === directions.up || direction === directions.down;
+  return direction === 'U' || direction === 'D';
 };
 
+/**
+ * Gets modifier which determins whether to move along the current axis by a positive or negative step.
+ * @param {String} direction 'R', 'L', 'U', or 'D'
+ * @returns {Number} 1 or -1
+ */
 const getDirectionModifier = direction => {
-  return direction === directions.right || direction === directions.up ? 1 : -1;
+  return direction === 'R' || direction === 'U' ? 1 : -1;
 };
 
+/**
+ * Traverses the two paths, and determins the coords at which they intersect.
+ * Keeps track of the distance travelled to reach each intersection.
+ * @param {[String]} pathA e.g. ['R8', 'U5', 'L5', 'D3']
+ * @param {[String]} pathB e.g. ['U7', 'R6', 'D4', 'L4']
+ */
 const getIntersections = (pathA, pathB) => {
   const map = {};
 
-  const intersect = (x, y, name, totalSteps) => {
-    const key = `${x}${y}`;
+  const plot = (x, y, name, totalSteps) => {
+    const key = `${x},${y}`;
     map[key] = Object.assign(
       map[key] || {},
-      {
-        [name]: { totalSteps },
-        x,
-        y
-      });
+      { [name]: { totalSteps }, x, y }
+    );
   };
 
   const traversePath = (path, name) => {
@@ -38,18 +49,17 @@ const getIntersections = (pathA, pathB) => {
 
     path.forEach(step => {
       const direction = step[0];
-      const distance = step.slice(1);
+      const distance = Number(step.slice(1));
       let steps = 0;
-      const modifier = getDirectionModifier(direction)
 
       while (steps < distance) {
-        intersect(x, y, name, totalStepsTaken);
+        plot(x, y, name, totalStepsTaken);
 
         if (isHorizontalMovement(direction)) {
-          x += modifier;
+          x += getDirectionModifier(direction);
         }
         else if (isVerticalMovement(direction)) {
-          y += modifier;
+          y += getDirectionModifier(direction);
         }
 
         steps++;
@@ -65,6 +75,13 @@ const getIntersections = (pathA, pathB) => {
   return Object.values(map).filter(node => node.a && node.b && (node.x !== 0 && node.y !== 0));
 };
 
+/**
+ * Determine the intersection with the smallest number of steps from 0,0.
+ * NOT reliant on following the paths.
+ * @param {[String]} pathA e.g. ['R8', 'U5', 'L5', 'D3']
+ * @param {[String]} pathB e.g. ['U7', 'R6', 'D4', 'L4']
+ * @returns {Number}
+ */
 const getManhattanDistance = (pathA, pathB) => {
 
   const intersections = getIntersections(pathA, pathB);
@@ -73,6 +90,13 @@ const getManhattanDistance = (pathA, pathB) => {
   return Math.min(...manhattanDistances);
 };
 
+/**
+ * Determine the intersection with the smallest number of steps from 0,0.
+ * Steps MUST follow the paths.
+ * @param {[String]} pathA e.g. ['R8', 'U5', 'L5', 'D3']
+ * @param {[String]} pathB e.g. ['U7', 'R6', 'D4', 'L4']
+ * @returns {Number}
+ */
 const getSmallestStepsSum = (pathA, pathB) => {
 
   const intersections = getIntersections(pathA, pathB);
