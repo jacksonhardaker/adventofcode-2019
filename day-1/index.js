@@ -9,5 +9,5 @@ const totalFuelRequiredPart1 = dataArray.reduce((total, mass) => total + calcula
 // Reduce array of masses to single value, buy calculating the fuel for each RECURSIVELY and summing them.
 const totalFuelRequiredPart2 = dataArray.reduce((total, mass) => total + calculateRecursive(mass), 0);
 
-console.log(`Part 1 result: ${totalFuelRequiredPart1}`);
-console.log(`Part 2 result: ${totalFuelRequiredPart2}`);
+console.log(`Part 1 result: ${totalFuelRequiredPart1}`); // 3087896
+console.log(`Part 2 result: ${totalFuelRequiredPart2}`); // 4628989

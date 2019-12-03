@@ -7,5 +7,5 @@ const finalStatePart1 = handle1202ProgramAlarm(numberCodeArray, 12, 2);
 
 const resultPart2 = calculateOutput(numberCodeArray, 19690720);
 
-console.log(`Part 1 result: ${finalStatePart1[0]}`);
-console.log(`Part 2 result: ${resultPart2}`);
+console.log(`Part 1 result: ${finalStatePart1[0]}`); // 4090701
+console.log(`Part 2 result: ${resultPart2}`); // 6421
