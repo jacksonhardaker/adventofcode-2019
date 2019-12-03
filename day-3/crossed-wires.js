@@ -5,22 +5,30 @@ const directions = {
   left: 'L'
 };
 
-const findSmallestNumber = data => {
-  return data.reduce((num, shortest) => {
-    return num < shortest ? num : shortest;
-  }, Infinity);
+const isHorizontalMovement = direction => {
+  return direction === directions.right || direction === directions.left;
+};
+
+const isVerticalMovement = direction => {
+  return direction === directions.up || direction === directions.down;
+};
+
+const getDirectionModifier = direction => {
+  return direction === directions.right || direction === directions.up ? 1 : -1;
 };
 
 const getIntersections = (pathA, pathB) => {
   const map = {};
 
-  const addNode = (x, y, name, totalSteps) => {
-    // Coords are x,y.
-    map[`${x}${y}`] = Object.assign(map[`${x}${y}`] || {}, {
-      [name]: { totalSteps },
-      x,
-      y
-    });
+  const intersect = (x, y, name, totalSteps) => {
+    const key = `${x}${y}`;
+    map[key] = Object.assign(
+      map[key] || {},
+      {
+        [name]: { totalSteps },
+        x,
+        y
+      });
   };
 
   const traversePath = (path, name) => {
@@ -32,44 +40,20 @@ const getIntersections = (pathA, pathB) => {
       const direction = step[0];
       const distance = step.slice(1);
       let steps = 0;
+      const modifier = getDirectionModifier(direction)
 
-      switch (direction) {
-        case directions.right:
-          steps = 0;
-          while (steps < distance) {
-            addNode(x, y, name, totalStepsTaken);
-            x++;
-            steps++;
-            totalStepsTaken++;
-          }
-          break;
-        case directions.left:
-          steps = 0;
-          while (steps < distance) {
-            addNode(x, y, name, totalStepsTaken);
-            x--;
-            steps++;
-            totalStepsTaken++;
-          }
-          break;
-        case directions.up:
-          steps = 0;
-          while (steps < distance) {
-            addNode(x, y, name, totalStepsTaken);
-            y++;
-            steps++;
-            totalStepsTaken++;
-          }
-          break;
-        case directions.down:
-          steps = 0;
-          while (steps < distance) {
-            addNode(x, y, name, totalStepsTaken);
-            y--;
-            steps++;
-            totalStepsTaken++;
-          }
-          break;
+      while (steps < distance) {
+        intersect(x, y, name, totalStepsTaken);
+
+        if (isHorizontalMovement(direction)) {
+          x += modifier;
+        }
+        else if (isVerticalMovement(direction)) {
+          y += modifier;
+        }
+
+        steps++;
+        totalStepsTaken++;
       }
     });
   };
@@ -77,35 +61,24 @@ const getIntersections = (pathA, pathB) => {
   traversePath(pathA, 'a');
   traversePath(pathB, 'b');
 
-  const nodesArray = Object.values(map);
-  const intersections = nodesArray.filter(node => node.a && node.b && (node.x !== 0 && node.y !== 0));
-
-  return intersections;
+  // Node is intersected by both a and b, and is not at 0,0
+  return Object.values(map).filter(node => node.a && node.b && (node.x !== 0 && node.y !== 0));
 };
 
 const getManhattanDistance = (pathA, pathB) => {
 
   const intersections = getIntersections(pathA, pathB);
+  const manhattanDistances = intersections.map(({ x, y }) => Math.abs(x) + Math.abs(y));
 
-  const manhattanDistances = intersections.map(intersection => {
-    return Math.abs(intersection.x) + Math.abs(intersection.y)
-  });
-
-  const shortestManhattanDistance = findSmallestNumber(manhattanDistances)
-
-  return shortestManhattanDistance;
+  return Math.min(...manhattanDistances);
 };
 
 const getSmallestStepsSum = (pathA, pathB) => {
+
   const intersections = getIntersections(pathA, pathB);
+  const totalStepsSum = intersections.map(({ a, b }) => a.totalSteps + b.totalSteps);
 
-  const totalStepsSum = intersections.map(intersection => {
-    return intersection.a.totalSteps + intersection.b.totalSteps;
-  });
-
-  const shortestSteps = findSmallestNumber(totalStepsSum);
-
-  return shortestSteps;
+  return Math.min(...totalStepsSum);
 };
 
 module.exports = {
