@@ -8,8 +8,11 @@
 const hasAdjacent = (pwdString, strictMode = false) => {
   const pwdArray = [...pwdString];
 
-  return pwdArray.some(digit => {
+  return pwdArray.some((digit, index) => {
     const duplicateCount = pwdArray.filter(d => d === digit).length;
+
+    if (pwdString[index + 1] !== digit)
+      return false;
 
     if (strictMode)
       return duplicateCount == 2;
