@@ -7,4 +7,4 @@ const outputPart1 = calculateOrbits(dataArray);
 const outputPart2 = calculateMinTransfers(dataArray, 'YOU', 'SAN');
 
 console.log(`Part 1 result: ${outputPart1}`); // 344238
-console.log(`Part 2 result: ${outputPart2}`); // 
+console.log(`Part 2 result: ${outputPart2}`); // 436

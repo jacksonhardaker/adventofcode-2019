@@ -1,22 +1,4 @@
-/**
- * Valid OPCODES
- */
-const opcodes = {
-  end: 99,
-  add: 1,
-  multiply: 2,
-  saveInput: 3,
-  output: 4,
-  jumpIfTrue: 5,
-  jumpIfFalse: 6,
-  lessThan: 7,
-  equals: 8,
-};
-
-const parameterModes = {
-  position: 0,
-  immediate: 1
-};
+const generateCombinations = require('./combinations');
 
 const getOpcodeAndParameterModesFromInstruction = instruction => {
   const intStr = `${instruction}`;
@@ -37,11 +19,12 @@ const getOpcodeAndParameterModesFromInstruction = instruction => {
 
 /**
  * @param {[Number]} memory 
+ * @param {Number} phaseSetting
  * @param {Number} input
  */
-const compute = (memory, input) => {
-  let instructionPointer = 0;
-  const output = [];
+const compute = (memory, input = 0, phaseSetting, instructionPointerStart = 0) => {
+  let settingUsed = false;
+  let instructionPointer = instructionPointerStart;
 
   const incrementIndexAndGetNextInput = (increment = 4) => {
     instructionPointer = instructionPointer + increment;
@@ -50,9 +33,9 @@ const compute = (memory, input) => {
 
   const getValue = (param, mode) => {
     switch (mode) {
-      case parameterModes.position:
+      case 0: // position mode
         return memory[param];
-      case parameterModes.immediate:
+      case 1: // immedate mode
         return param;
       default:
         throw new Error('Invalid Parameter Mode');
@@ -67,32 +50,33 @@ const compute = (memory, input) => {
     } = getOpcodeAndParameterModesFromInstruction(instruction);
 
     switch (opcode) {
-      case opcodes.end:
-        return memory;
-      case opcodes.add:
+      case 99: // end
+        return null;
+      case 1: // add
         memory[param3] = getValue(param1, param1Mode, memory) + getValue(param2, param2Mode, memory);
         return next(
-          incrementIndexAndGetNextInput()
+          incrementIndexAndGetNextInput(4)
         );
-      case opcodes.multiply:
+      case 2: // multiply
         memory[param3] = getValue(param1, param1Mode, memory) * getValue(param2, param2Mode, memory);
         return next(
-          incrementIndexAndGetNextInput()
+          incrementIndexAndGetNextInput(4)
         );
-      case opcodes.saveInput:
+      case 3: // write
         // Saves input to memory at parameter 1
-        memory[param1] = input;
+        memory[param1] = settingUsed || phaseSetting === undefined ? input : phaseSetting;
+        settingUsed = true;
         return next(
           incrementIndexAndGetNextInput(2)
         );
-      case opcodes.output:
+      case 4: // read
         // Outputs the contents of memory at parameter 1
-
-        output.push(getValue(param1, param1Mode));
-        return next(
-          incrementIndexAndGetNextInput(2)
-        );
-      case opcodes.jumpIfTrue:
+        return {
+          memory,
+          output: getValue(param1, param1Mode),
+          instructionPointer: instructionPointer + 2
+        };
+      case 5: // jump if true
         if (getValue(param1, param1Mode) !== 0) {
           instructionPointer = getValue(param2, param2Mode);
           return next(
@@ -102,7 +86,7 @@ const compute = (memory, input) => {
         return next(
           incrementIndexAndGetNextInput(3)
         );
-      case opcodes.jumpIfFalse:
+      case 6: // jump if false
         if (getValue(param1, param1Mode) === 0) {
           instructionPointer = getValue(param2, param2Mode);
           return next(
@@ -112,25 +96,76 @@ const compute = (memory, input) => {
         return next(
           incrementIndexAndGetNextInput(3)
         );
-      case opcodes.lessThan:
+      case 7: // less than
         memory[param3] = getValue(param1, param1Mode) < getValue(param2, param2Mode) ? 1 : 0;
         return next(
-          incrementIndexAndGetNextInput()
+          incrementIndexAndGetNextInput(4)
         );
-      case opcodes.equals:
+      case 8: // equal to
         memory[param3] = getValue(param1, param1Mode) === getValue(param2, param2Mode) ? 1 : 0;
         return next(
-          incrementIndexAndGetNextInput()
+          incrementIndexAndGetNextInput(4)
         );
       default:
         throw new Error('Invalid Opcode');
     }
   };
 
-  next(memory);
-  return output;
+  if (instructionPointer === 0) {
+    return next(memory);
+  }
+  else {
+    return next(memory.slice(instructionPointer));
+  }
+
+};
+
+const runFeedbackSequences = (memory, phaseSettings) => {
+  let phases = [...phaseSettings];
+  let input = 0;
+  let amps = [
+    compute([...memory], input, phases.shift()),
+  ];
+  let finalAmpEOutput = null;
+
+  for (let i = 1; i < 5; i++) {
+    amps[i] = compute([...memory], amps[i - 1].output, phases.shift())
+  }
+
+  let currentAmp = 0;
+  while (amps[4]) {
+    const previousAmpIndex = currentAmp === 0 ? 4 : currentAmp - 1;
+    const { memory, instructionPointer } = amps[currentAmp];
+    if (amps[previousAmpIndex]) {
+      const { output } = amps[previousAmpIndex];
+  
+      amps[currentAmp] = compute(memory, output, undefined, instructionPointer);
+      currentAmp = currentAmp === 4 ? 0 : currentAmp + 1;
+    }
+    else {
+      break;
+    }
+
+    finalAmpEOutput = amps[4].output;
+  }
+
+  return finalAmpEOutput;
+};
+
+const calculateHighestFeedbackThrustSignal = memory => {
+  let highestResult = 0;
+  const combinations = generateCombinations(5, 9);
+
+  combinations.forEach(phaseSettings => {
+    const result = runFeedbackSequences(memory, phaseSettings);
+    highestResult = result > highestResult ? result : highestResult;
+  });
+
+  return highestResult;
 };
 
 module.exports = {
   compute,
+  runFeedbackSequences,
+  calculateHighestFeedbackThrustSignal
 };

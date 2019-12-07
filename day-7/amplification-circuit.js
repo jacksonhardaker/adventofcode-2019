@@ -1,3 +1,5 @@
+const generateCombinations = require('./combinations');
+
 /**
  * Valid OPCODES
  */
@@ -37,9 +39,11 @@ const getOpcodeAndParameterModesFromInstruction = instruction => {
 
 /**
  * @param {[Number]} memory 
+ * @param {Number} phaseSetting
  * @param {Number} input
  */
-const compute = (memory, input) => {
+const compute = (memory, input = 0, phaseSetting) => {
+  let settingUsed = false;
   let instructionPointer = 0;
   const output = [];
 
@@ -81,7 +85,8 @@ const compute = (memory, input) => {
         );
       case opcodes.saveInput:
         // Saves input to memory at parameter 1
-        memory[param1] = input;
+        memory[param1] = settingUsed || phaseSetting === undefined ? input : phaseSetting;
+        settingUsed = true;
         return next(
           incrementIndexAndGetNextInput(2)
         );
@@ -131,6 +136,38 @@ const compute = (memory, input) => {
   return output;
 };
 
+const runSequences = (memory, [
+  phaseSettingA,
+  phaseSettingB,
+  phaseSettingC,
+  phaseSettingD,
+  phaseSettingE,
+]) => {
+
+  const ampOutputA = compute([...memory], 0, phaseSettingA).pop();
+  const ampOutputB = compute([...memory], ampOutputA, phaseSettingB).pop();
+  const ampOutputC = compute([...memory], ampOutputB, phaseSettingC).pop();
+  const ampOutputD = compute([...memory], ampOutputC, phaseSettingD).pop();
+  const ampOutputE = compute([...memory], ampOutputD, phaseSettingE).pop();
+
+  return ampOutputE;
+};
+
+const calculateHighestThrustSignal = memory => {
+  let highestResult = 0;
+  const combinations = generateCombinations(0, 4);
+
+  combinations.forEach(phaseSettings => {
+    const result = runSequences(memory, phaseSettings);
+    highestResult = result > highestResult ? result : highestResult;
+  });
+
+
+  return highestResult;
+};
+
 module.exports = {
   compute,
+  runSequences,
+  calculateHighestThrustSignal,
 };
