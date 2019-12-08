@@ -8,4 +8,4 @@ const outputPart1 = calculateHighestThrustSignal(dataArray);
 const outputPart2 = calculateHighestFeedbackThrustSignal(dataArray);
 
 console.log(`Part 1 result: ${outputPart1}`); // 65464
-console.log(`Part 2 result: ${outputPart2}`); // 
+console.log(`Part 2 result: ${outputPart2}`); // 1518124
