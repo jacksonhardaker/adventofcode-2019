@@ -78,7 +78,7 @@ const corruptionCheck = (width, height, input) => {
 
 const printImage = (width, height, input) => {
   const image = getFinalImage(width, height, input);
-  return image.join('\n').replace(/0/g, '⬛').replace(/1/g, '⬜')
+  return image.join('\n').replace(/0/g, '⬛').replace(/1/g, '⬜');
 };
 
 module.exports = {
